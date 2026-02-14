@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
-const MAX_STAGE = 10
+const MAX_STAGE = 100
 
 function clampStage(value) {
   if (!Number.isFinite(value)) return 1
@@ -263,7 +263,7 @@ function App() {
 
   const feedbackText =
     phase === 'finished'
-      ? '축하합니다! 10단계를 클리어하셨습니다.'
+      ? '축하합니다! 100단계를 클리어하셨습니다.'
       : phase === 'result' && result === 'success'
         ? '정답입니다! 다음 단계로 이동하세요.'
         : phase === 'result' && result === 'fail'
@@ -286,7 +286,7 @@ function App() {
         <section className="stage-row">
           <div className="stage-info">
             <span>현재 단계</span>
-            <strong>{stage} / 10</strong>
+            <strong>{stage} / 100</strong>
           </div>
           <button type="button" className="share-btn" onClick={handleShare} disabled={!canShare}>
             공유하기
