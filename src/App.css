@@ -102,17 +102,6 @@
   overflow: hidden;
 }
 
-.track {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 138px;
-  height: 52px;
-  border-radius: 999px;
-  border: 1px dashed #b4cffb;
-  background: rgba(49, 130, 246, 0.05);
-}
-
 .dog-character {
   position: absolute;
   top: 34px;
@@ -356,11 +345,6 @@
 
   .board {
     min-height: 266px;
-  }
-
-  .track {
-    top: 156px;
-    height: 56px;
   }
 
   .dog-character {

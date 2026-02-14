@@ -235,8 +235,6 @@ function App() {
         </section>
 
         <section className="board">
-          <div className="track" />
-
           {phase === 'feeding' && targetDogId && (
             <div className="bone" style={{ '--target-x': `${targetX}%` }}>
               🦴
