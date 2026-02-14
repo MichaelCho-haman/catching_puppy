@@ -2,19 +2,141 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const MAX_STAGE = 100
+const STORAGE_NICKNAME_KEY = 'catchingPuppyNickname'
+const STORAGE_LEADERBOARD_KEY = 'catchingPuppyLeaderboardV1'
 
 function clampStage(value) {
   if (!Number.isFinite(value)) return 1
   return Math.max(1, Math.min(MAX_STAGE, Math.floor(value)))
 }
 
-function getInitialStageFromQuery() {
-  if (typeof window === 'undefined') return 1
+function clampScore(value) {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(MAX_STAGE, Math.floor(value)))
+}
 
-  const params = new URLSearchParams(window.location.search)
-  const stageParam = Number(params.get('stage'))
+function normalizeNickname(value) {
+  return value.trim().replace(/\s+/g, ' ')
+}
 
-  return clampStage(stageParam)
+function isValidNickname(value) {
+  const length = normalizeNickname(value).length
+  return length >= 2 && length <= 12
+}
+
+function sanitizeLeaderboard(data) {
+  if (!Array.isArray(data)) return []
+
+  const entries = data
+    .map((item, index) => {
+      if (!item || typeof item !== 'object') return null
+
+      const nickname = normalizeNickname(String(item.nickname || ''))
+      if (!nickname) return null
+
+      const score = clampScore(Number(item.score))
+      const playedAt = Number.isFinite(Number(item.playedAt))
+        ? Number(item.playedAt)
+        : Date.now() - index * 1000
+
+      return {
+        nickname,
+        score,
+        playedAt,
+      }
+    })
+    .filter(Boolean)
+
+  return entries
+    .sort((a, b) => b.score - a.score || a.playedAt - b.playedAt)
+    .slice(0, 100)
+}
+
+function loadLeaderboardFromStorage() {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_LEADERBOARD_KEY)
+    if (!raw) return []
+
+    return sanitizeLeaderboard(JSON.parse(raw))
+  } catch {
+    return []
+  }
+}
+
+function saveLeaderboardToStorage(leaderboard) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(STORAGE_LEADERBOARD_KEY, JSON.stringify(leaderboard))
+  } catch {
+    // ignore storage write errors
+  }
+}
+
+function loadNicknameFromStorage() {
+  if (typeof window === 'undefined') return ''
+
+  try {
+    return normalizeNickname(window.localStorage.getItem(STORAGE_NICKNAME_KEY) || '')
+  } catch {
+    return ''
+  }
+}
+
+function saveNicknameToStorage(nickname) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(STORAGE_NICKNAME_KEY, nickname)
+  } catch {
+    // ignore storage write errors
+  }
+}
+
+function parseSharedRankingFromUrl() {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('view') !== 'ranking') return []
+
+    const rawRanking = params.get('ranking')
+    if (!rawRanking) return []
+
+    return sanitizeLeaderboard(JSON.parse(rawRanking))
+  } catch {
+    return []
+  }
+}
+
+function buildUpdatedLeaderboard(current, nickname, score) {
+  const normalizedNickname = normalizeNickname(nickname)
+  const normalizedLower = normalizedNickname.toLowerCase()
+  const next = [...current]
+
+  const existingIndex = next.findIndex((item) => item.nickname.toLowerCase() === normalizedLower)
+
+  if (existingIndex >= 0) {
+    const existing = next[existingIndex]
+
+    if (score > existing.score) {
+      next[existingIndex] = {
+        ...existing,
+        score,
+        playedAt: Date.now(),
+      }
+    }
+  } else {
+    next.push({
+      nickname: normalizedNickname,
+      score,
+      playedAt: Date.now(),
+    })
+  }
+
+  return sanitizeLeaderboard(next)
 }
 
 function getDogCount(stage) {
@@ -65,15 +187,39 @@ function getShuffleInterval(stage) {
 }
 
 function App() {
-  const sharedStartStage = getInitialStageFromQuery()
+  const [boot] = useState(() => {
+    const loadedLeaderboard = loadLeaderboardFromStorage()
+    const sharedRanking = parseSharedRankingFromUrl()
+    const loadedNickname = loadNicknameFromStorage()
 
-  const [stage, setStage] = useState(sharedStartStage)
-  const [dogs, setDogs] = useState(() => createDogs(getDogCount(sharedStartStage)))
+    return {
+      localLeaderboard: loadedLeaderboard,
+      displayLeaderboard: sharedRanking.length > 0 ? sharedRanking : loadedLeaderboard,
+      isSharedRanking: sharedRanking.length > 0,
+      nickname: loadedNickname,
+    }
+  })
+
+  const [stage, setStage] = useState(1)
+  const [dogs, setDogs] = useState(() => createDogs(getDogCount(1)))
   const [targetDogId, setTargetDogId] = useState(null)
-  const [phase, setPhase] = useState('ready')
+  const [phase, setPhase] = useState(boot.isSharedRanking ? 'ranking' : 'ready')
   const [result, setResult] = useState(null)
   const [selectedDogId, setSelectedDogId] = useState(null)
   const [shuffleProgress, setShuffleProgress] = useState(0)
+
+  const [nickname, setNickname] = useState(boot.nickname)
+  const [nicknameInput, setNicknameInput] = useState(boot.nickname)
+  const [nicknameCheckStatus, setNicknameCheckStatus] = useState('idle')
+  const [nicknameCheckMessage, setNicknameCheckMessage] = useState('')
+  const [checkedNickname, setCheckedNickname] = useState('')
+  const [showNicknameSetup, setShowNicknameSetup] = useState(!boot.nickname)
+  const [pendingStartAfterNickname, setPendingStartAfterNickname] = useState(false)
+
+  const [localLeaderboard, setLocalLeaderboard] = useState(boot.localLeaderboard)
+  const [displayLeaderboard, setDisplayLeaderboard] = useState(boot.displayLeaderboard)
+  const [isSharedRanking, setIsSharedRanking] = useState(boot.isSharedRanking)
+  const [lastScore, setLastScore] = useState(null)
   const [shareFeedback, setShareFeedback] = useState('')
 
   const feedingTimeoutRef = useRef(null)
@@ -182,11 +328,30 @@ function App() {
     setSelectedDogId(null)
     setResult(null)
     setShuffleProgress(0)
+    setShareFeedback('')
     setPhase('feeding')
 
     feedingTimeoutRef.current = window.setTimeout(() => {
       startShuffle(currentStage)
     }, 1300)
+  }
+
+  const finishGame = (score) => {
+    clearTimers()
+
+    const finalScore = clampScore(score)
+    const updated = buildUpdatedLeaderboard(localLeaderboard, nickname, finalScore)
+
+    setLocalLeaderboard(updated)
+    setDisplayLeaderboard(updated)
+    setLastScore(finalScore)
+    setIsSharedRanking(false)
+    setPhase('ranking')
+    saveLeaderboardToStorage(updated)
+
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }
 
   const handleDogPick = (dogId) => {
@@ -198,41 +363,115 @@ function App() {
     setResult(isCorrect ? 'success' : 'fail')
 
     if (isCorrect && stage === MAX_STAGE) {
-      setPhase('finished')
+      finishGame(MAX_STAGE)
+      return
+    }
+
+    if (!isCorrect) {
+      finishGame(stage - 1)
       return
     }
 
     setPhase('result')
   }
 
-  const buildShareUrl = (stageToShare = stage) => {
+  const collectNicknamePool = () => {
+    const all = [...localLeaderboard, ...displayLeaderboard]
+    return new Set(all.map((entry) => entry.nickname.toLowerCase()))
+  }
+
+  const handleCheckNickname = () => {
+    const normalized = normalizeNickname(nicknameInput)
+
+    if (!isValidNickname(normalized)) {
+      setNicknameCheckStatus('invalid')
+      setCheckedNickname('')
+      setNicknameCheckMessage('닉네임은 2~12자로 입력해 주세요.')
+      return
+    }
+
+    const lower = normalized.toLowerCase()
+    const currentLower = nickname.toLowerCase()
+    const taken = collectNicknamePool().has(lower) && lower !== currentLower
+
+    if (taken) {
+      setNicknameCheckStatus('duplicate')
+      setCheckedNickname('')
+      setNicknameCheckMessage('이미 사용 중인 닉네임입니다.')
+      return
+    }
+
+    setNicknameCheckStatus('ok')
+    setCheckedNickname(normalized)
+    setNicknameCheckMessage('사용 가능한 닉네임입니다.')
+  }
+
+  const handleConfirmNickname = () => {
+    const normalized = normalizeNickname(nicknameInput)
+
+    if (nicknameCheckStatus !== 'ok' || checkedNickname !== normalized) {
+      setNicknameCheckStatus('invalid')
+      setNicknameCheckMessage('중복 확인 후 저장해 주세요.')
+      return
+    }
+
+    setNickname(normalized)
+    setNicknameInput(normalized)
+    saveNicknameToStorage(normalized)
+    setShowNicknameSetup(false)
+    setNicknameCheckMessage('')
+
+    if (pendingStartAfterNickname) {
+      setPendingStartAfterNickname(false)
+      setShareFeedback('')
+      setLastScore(null)
+      setIsSharedRanking(false)
+      startRound(1)
+    }
+  }
+
+  const handleNicknameInputChange = (event) => {
+    setNicknameInput(event.target.value)
+    setNicknameCheckStatus('idle')
+    setNicknameCheckMessage('')
+    setCheckedNickname('')
+  }
+
+  const buildShareRankingUrl = () => {
     if (typeof window === 'undefined') return ''
 
+    const payload = displayLeaderboard.slice(0, 20).map((item) => ({
+      nickname: item.nickname,
+      score: item.score,
+      playedAt: item.playedAt,
+    }))
+
     const url = new URL(`${window.location.origin}${window.location.pathname}`)
-    url.searchParams.set('stage', String(clampStage(stageToShare)))
+    url.searchParams.set('view', 'ranking')
+    url.searchParams.set('ranking', JSON.stringify(payload))
 
     return url.toString()
   }
 
-  const handleShare = async (stageToShare) => {
-    const shareUrl = buildShareUrl(stageToShare)
+  const handleShareRanking = async () => {
+    const shareUrl = buildShareRankingUrl()
 
     if (!shareUrl) return
 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: '껌 먹은 강아지 찾기',
-          text: `${stageToShare}단계부터 바로 도전해보세요!`,
+          title: '껌 먹은 강아지 찾기 랭킹',
+          text: '랭킹을 확인하고 바로 도전해보세요!',
           url: shareUrl,
         })
-        setShareFeedback('공유가 완료되었습니다.')
+        setShareFeedback('랭킹을 공유했습니다.')
         return
       }
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl)
-        setShareFeedback('공유 링크를 복사했습니다.')
+        setShareFeedback('랭킹 링크를 복사했습니다.')
         return
       }
 
@@ -245,16 +484,27 @@ function App() {
     }
   }
 
-  const showEndOptions = phase === 'finished' || (phase === 'result' && result === 'fail')
-  const showPrimaryAction = phase === 'ready' || (phase === 'result' && result === 'success')
-  const showShareAction = phase === 'finished' || (phase === 'result' && result === 'success')
-  const shareTargetStage =
-    phase === 'result' && result === 'success' ? clampStage(stage + 1) : clampStage(stage)
+  const handleStartFromRanking = () => {
+    if (!nickname) {
+      setPendingStartAfterNickname(true)
+      setShowNicknameSetup(true)
+      return
+    }
 
-  const primaryActionLabel = phase === 'ready' ? '게임 시작' : '다음 단계'
+    setShareFeedback('')
+    setLastScore(null)
+    setIsSharedRanking(false)
+    startRound(1)
+  }
 
   const handlePrimaryAction = () => {
     if (phase === 'ready') {
+      if (!nickname) {
+        setPendingStartAfterNickname(true)
+        setShowNicknameSetup(true)
+        return
+      }
+
       startRound(stage)
       return
     }
@@ -265,13 +515,11 @@ function App() {
   }
 
   const feedbackText =
-    phase === 'finished'
-      ? '축하합니다! 100단계를 클리어하셨습니다.'
-      : phase === 'result' && result === 'success'
-        ? '정답입니다! 다음 단계로 이동하세요.'
-        : phase === 'result' && result === 'fail'
-          ? '게임 종료! 다시 선택해 주세요.'
-          : ''
+    phase === 'result' && result === 'success' ? '정답입니다! 다음 단계로 이동하세요.' : ''
+
+  const showRanking = phase === 'ranking'
+  const showPrimaryAction = phase === 'ready' || (phase === 'result' && result === 'success')
+  const primaryActionLabel = phase === 'ready' ? '게임 시작' : '다음 단계'
 
   return (
     <div className="app-shell">
@@ -284,104 +532,147 @@ function App() {
           <p className="description">집중력 미니게임</p>
         </header>
 
-        <section className="stage-row">
-          <div className="stage-info">
-            <span>현재 단계</span>
-            <strong>{stage} / 100</strong>
-          </div>
-        </section>
+        {!showRanking && (
+          <>
+            <section className="stage-row">
+              <div className="stage-info">
+                <span>현재 단계</span>
+                <strong>{stage} / 100</strong>
+              </div>
+              <span className="nickname-chip">{nickname || '닉네임 미설정'}</span>
+            </section>
 
-        {sharedStartStage > 1 && phase === 'ready' && (
-          <p className="shared-stage-note">친구가 공유한 {sharedStartStage}단계부터 시작할 수 있습니다.</p>
-        )}
+            <section className="board">
+              {phase === 'feeding' && targetDogId && (
+                <div className="bone" style={{ '--target-x': `${targetX}%` }}>
+                  🦴
+                </div>
+              )}
 
-        <section className="board">
-          {phase === 'feeding' && targetDogId && (
-            <div className="bone" style={{ '--target-x': `${targetX}%` }}>
-              🦴
-            </div>
-          )}
+              {dogs.map((dog) => {
+                const isPicked = selectedDogId === dog.id
+                const isTarget = targetDogId === dog.id
+                const revealTarget = phase === 'result'
+                const showTargetBadge = revealTarget && isTarget
 
-          {dogs.map((dog) => {
-            const isPicked = selectedDogId === dog.id
-            const isTarget = targetDogId === dog.id
-            const revealTarget = phase === 'result' || phase === 'finished'
-            const showTargetBadge = revealTarget && isTarget
-
-            return (
-              <button
-                key={dog.id}
-                type="button"
-                className={`dog-character ${
-                  phase === 'guessing' ? 'guessing' : ''
-                } ${isPicked ? 'picked' : ''} ${showTargetBadge ? 'target' : ''}`}
-                style={{ left: `${slotPositions[dog.slot]}%` }}
-                onClick={() => handleDogPick(dog.id)}
-                disabled={phase !== 'guessing'}
-                aria-label={`${dog.id}번 강아지 선택`}
-              >
-                <span className="puppy">
-                  <span className="puppy-face">
-                    <span className="puppy-brows" />
-                    <span className="puppy-eyes" />
-                    <span className="puppy-muzzle">
-                      <span className="puppy-nose" />
-                      <span className="puppy-mouth" />
+                return (
+                  <button
+                    key={dog.id}
+                    type="button"
+                    className={`dog-character ${
+                      phase === 'guessing' ? 'guessing' : ''
+                    } ${isPicked ? 'picked' : ''} ${showTargetBadge ? 'target' : ''}`}
+                    style={{ left: `${slotPositions[dog.slot]}%` }}
+                    onClick={() => handleDogPick(dog.id)}
+                    disabled={phase !== 'guessing'}
+                    aria-label={`${dog.id}번 강아지 선택`}
+                  >
+                    <span className="puppy">
+                      <span className="puppy-face">
+                        <span className="puppy-brows" />
+                        <span className="puppy-eyes" />
+                        <span className="puppy-muzzle">
+                          <span className="puppy-nose" />
+                          <span className="puppy-mouth" />
+                        </span>
+                        <span className="puppy-blush left" />
+                        <span className="puppy-blush right" />
+                      </span>
                     </span>
-                    <span className="puppy-blush left" />
-                    <span className="puppy-blush right" />
-                  </span>
-                </span>
-                {showTargetBadge && <span className="target-badge">껌 먹음</span>}
-              </button>
-            )
-          })}
-        </section>
+                    {showTargetBadge && <span className="target-badge">껌 먹음</span>}
+                  </button>
+                )
+              })}
+            </section>
 
-        <div className="progress-wrap" aria-hidden={phase !== 'shuffling'}>
-          <div className="progress-bar" style={{ width: `${shuffleProgress}%` }} />
-        </div>
+            <div className="progress-wrap" aria-hidden={phase !== 'shuffling'}>
+              <div className="progress-bar" style={{ width: `${shuffleProgress}%` }} />
+            </div>
 
-        {feedbackText && (
-          <p className={`result-text ${result === 'success' || phase === 'finished' ? 'success' : 'fail'}`}>
-            {feedbackText}
-          </p>
+            {feedbackText && <p className="result-text success">{feedbackText}</p>}
+
+            <section className="controls">
+              {showPrimaryAction && (
+                <button type="button" className="action-btn" onClick={handlePrimaryAction}>
+                  {primaryActionLabel}
+                </button>
+              )}
+
+              {!showPrimaryAction && (
+                <button type="button" className="action-btn" disabled>
+                  진행 중...
+                </button>
+              )}
+            </section>
+          </>
         )}
 
-        <section className="controls">
-          {showPrimaryAction && (
-            <button type="button" className="action-btn" onClick={handlePrimaryAction}>
-              {primaryActionLabel}
-            </button>
-          )}
+        {showRanking && (
+          <section className="ranking-panel">
+            <div className="ranking-header">
+              <h2>{isSharedRanking ? '공유받은 랭킹' : '게임 종료 랭킹'}</h2>
+              {lastScore !== null && <p>내 최고 기록: {lastScore}단계</p>}
+            </div>
 
-          {showEndOptions && (
-            <div className="end-actions">
-              <button type="button" className="action-btn secondary" onClick={() => startRound(1)}>
-                처음부터
+            {isSharedRanking && <p className="shared-stage-note">공유받은 랭킹입니다. 바로 게임을 시작할 수 있습니다.</p>}
+
+            <ol className="ranking-list">
+              {displayLeaderboard.slice(0, 10).map((item, index) => (
+                <li key={`${item.nickname}-${item.playedAt}`} className="ranking-item">
+                  <span className="rank-order">{index + 1}</span>
+                  <span className="rank-name">{item.nickname}</span>
+                  <strong className="rank-score">{item.score}단계</strong>
+                </li>
+              ))}
+            </ol>
+
+            {displayLeaderboard.length === 0 && (
+              <p className="empty-ranking">아직 랭킹 데이터가 없습니다. 첫 기록을 만들어보세요.</p>
+            )}
+
+            <div className="ranking-actions">
+              <button type="button" className="action-btn" onClick={handleStartFromRanking}>
+                게임 시작하기
               </button>
-              <button type="button" className="action-btn" onClick={() => startRound(stage)}>
-                이 단계부터 하기
+              <button type="button" className="share-btn" onClick={handleShareRanking}>
+                랭킹 공유하기
               </button>
             </div>
-          )}
 
-          {!showPrimaryAction && !showEndOptions && (
-            <button type="button" className="action-btn" disabled>
-              진행 중...
-            </button>
-          )}
-        </section>
-
-        {showShareAction && (
-          <section className="share-panel">
-            <button type="button" className="share-btn" onClick={() => handleShare(shareTargetStage)}>
-              공유하기
-            </button>
             {shareFeedback && <p className="share-feedback">{shareFeedback}</p>}
           </section>
         )}
       </main>
+
+      {showNicknameSetup && (
+        <section className="nickname-overlay" role="dialog" aria-modal="true" aria-label="닉네임 설정">
+          <div className="nickname-modal">
+            <h2>닉네임 설정</h2>
+            <p>처음 이용 시 닉네임을 입력하고 중복 확인을 진행해 주세요.</p>
+            <input
+              className="nickname-input"
+              type="text"
+              value={nicknameInput}
+              onChange={handleNicknameInputChange}
+              placeholder="닉네임 (2~12자)"
+              maxLength={12}
+            />
+            <button type="button" className="check-btn" onClick={handleCheckNickname}>
+              중복 확인
+            </button>
+
+            {nicknameCheckMessage && (
+              <p className={`nickname-msg ${nicknameCheckStatus === 'ok' ? 'ok' : 'warn'}`}>
+                {nicknameCheckMessage}
+              </p>
+            )}
+
+            <button type="button" className="action-btn" onClick={handleConfirmNickname}>
+              저장하고 시작하기
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
