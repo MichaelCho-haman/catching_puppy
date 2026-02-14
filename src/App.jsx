@@ -205,17 +205,17 @@ function App() {
     setPhase('result')
   }
 
-  const buildShareUrl = () => {
+  const buildShareUrl = (stageToShare = stage) => {
     if (typeof window === 'undefined') return ''
 
     const url = new URL(`${window.location.origin}${window.location.pathname}`)
-    url.searchParams.set('stage', String(stage))
+    url.searchParams.set('stage', String(clampStage(stageToShare)))
 
     return url.toString()
   }
 
-  const handleShare = async () => {
-    const shareUrl = buildShareUrl()
+  const handleShare = async (stageToShare) => {
+    const shareUrl = buildShareUrl(stageToShare)
 
     if (!shareUrl) return
 
@@ -223,7 +223,7 @@ function App() {
       if (navigator.share) {
         await navigator.share({
           title: '껌 먹은 강아지 찾기',
-          text: `${stage}단계부터 바로 도전해보세요!`,
+          text: `${stageToShare}단계부터 바로 도전해보세요!`,
           url: shareUrl,
         })
         setShareFeedback('공유가 완료되었습니다.')
@@ -247,6 +247,9 @@ function App() {
 
   const showEndOptions = phase === 'finished' || (phase === 'result' && result === 'fail')
   const showPrimaryAction = phase === 'ready' || (phase === 'result' && result === 'success')
+  const showShareAction = phase === 'finished' || (phase === 'result' && result === 'success')
+  const shareTargetStage =
+    phase === 'result' && result === 'success' ? clampStage(stage + 1) : clampStage(stage)
 
   const primaryActionLabel = phase === 'ready' ? '게임 시작' : '다음 단계'
 
@@ -270,8 +273,6 @@ function App() {
           ? '게임 종료! 다시 선택해 주세요.'
           : ''
 
-  const canShare = phase !== 'feeding' && phase !== 'shuffling'
-
   return (
     <div className="app-shell">
       <div className="aurora aurora-a" />
@@ -288,16 +289,11 @@ function App() {
             <span>현재 단계</span>
             <strong>{stage} / 100</strong>
           </div>
-          <button type="button" className="share-btn" onClick={handleShare} disabled={!canShare}>
-            공유하기
-          </button>
         </section>
 
         {sharedStartStage > 1 && phase === 'ready' && (
           <p className="shared-stage-note">친구가 공유한 {sharedStartStage}단계부터 시작할 수 있습니다.</p>
         )}
-
-        {shareFeedback && <p className="share-feedback">{shareFeedback}</p>}
 
         <section className="board">
           {phase === 'feeding' && targetDogId && (
@@ -376,6 +372,15 @@ function App() {
             </button>
           )}
         </section>
+
+        {showShareAction && (
+          <section className="share-panel">
+            <button type="button" className="share-btn" onClick={() => handleShare(shareTargetStage)}>
+              공유하기
+            </button>
+            {shareFeedback && <p className="share-feedback">{shareFeedback}</p>}
+          </section>
+        )}
       </main>
     </div>
   )

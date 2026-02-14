@@ -71,10 +71,6 @@
 
 .stage-row {
   margin-top: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   border: 1px solid #d6e5ff;
   border-radius: 14px;
   padding: 10px 12px;
@@ -84,7 +80,8 @@
 .stage-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .stage-info span {
@@ -99,13 +96,14 @@
 
 .share-btn {
   border: 1px solid #cfe1ff;
-  border-radius: 999px;
+  border-radius: 12px;
   background: #ffffff;
   color: var(--toss-blue-700);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  padding: 7px 12px;
+  padding: 10px 12px;
   cursor: pointer;
+  width: 100%;
 }
 
 .share-btn:disabled {
@@ -120,9 +118,13 @@
 }
 
 .share-feedback {
-  margin: 6px 2px 0;
-  font-size: 0.82rem;
+  margin: 8px 2px 0;
+  font-size: 0.84rem;
   color: var(--text-sub);
+}
+
+.share-panel {
+  margin-top: 10px;
 }
 
 .board {
@@ -481,15 +483,6 @@
 }
 
 @media (max-width: 360px) {
-  .stage-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .stage-info {
-    justify-content: space-between;
-  }
-
   .end-actions {
     grid-template-columns: 1fr;
   }
