@@ -2,13 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const MAX_STAGE = 10
-const DOG_VARIANTS = [
-  { name: '복슬이', emoji: '🐶' },
-  { name: '구름이', emoji: '🐕' },
-  { name: '콩이', emoji: '🐩' },
-  { name: '초코', emoji: '🦮' },
-  { name: '두부', emoji: '🐕‍🦺' },
-]
 
 function getDogCount(stage) {
   return stage >= 5 ? 5 : 3
@@ -17,8 +10,8 @@ function getDogCount(stage) {
 function getSlotPositions(count) {
   if (count <= 1) return [50]
 
-  const start = 10
-  const end = 90
+  const start = 20
+  const end = 80
   const gap = (end - start) / (count - 1)
 
   return Array.from({ length: count }, (_, idx) => Number((start + gap * idx).toFixed(2)))
@@ -28,7 +21,6 @@ function createDogs(count) {
   return Array.from({ length: count }, (_, idx) => ({
     id: idx + 1,
     slot: idx,
-    ...DOG_VARIANTS[idx],
   }))
 }
 
@@ -63,7 +55,6 @@ function App() {
   const [dogs, setDogs] = useState(() => createDogs(getDogCount(1)))
   const [targetDogId, setTargetDogId] = useState(null)
   const [phase, setPhase] = useState('ready')
-  const [statusText, setStatusText] = useState('시작 버튼을 누르면 강아지 야바위가 시작됩니다.')
   const [result, setResult] = useState(null)
   const [selectedDogId, setSelectedDogId] = useState(null)
   const [shuffleProgress, setShuffleProgress] = useState(0)
@@ -107,7 +98,6 @@ function App() {
     setDogs(createDogs(getDogCount(nextStage)))
     setTargetDogId(null)
     setPhase('ready')
-    setStatusText('시작 버튼을 누르면 강아지 야바위가 시작됩니다.')
     setResult(null)
     setSelectedDogId(null)
     setShuffleProgress(0)
@@ -123,7 +113,6 @@ function App() {
     const startedAt = Date.now()
 
     setPhase('shuffling')
-    setStatusText('강아지들이 섞이는 중입니다. 눈으로 끝까지 따라가 주세요!')
     setShuffleProgress(0)
 
     shuffleIntervalRef.current = window.setInterval(() => {
@@ -149,7 +138,6 @@ function App() {
 
       setShuffleProgress(100)
       setPhase('guessing')
-      setStatusText('껌 먹은 강아지를 골라주세요!')
     }, duration)
   }
 
@@ -165,7 +153,6 @@ function App() {
     setResult(null)
     setShuffleProgress(0)
     setPhase('feeding')
-    setStatusText('뼈다귀 껌을 던졌어요! 어느 강아지가 먹었을까요?')
 
     feedingTimeoutRef.current = window.setTimeout(() => {
       startShuffle(stage)
@@ -182,16 +169,10 @@ function App() {
 
     if (isCorrect && stage === MAX_STAGE) {
       setPhase('finished')
-      setStatusText('축하드립니다! 10단계를 모두 클리어하셨습니다.')
       return
     }
 
     setPhase('result')
-    setStatusText(
-      isCorrect
-        ? `정답입니다! ${stage + 1}단계로 올라가세요.`
-        : '아쉽습니다. 껌 먹은 강아지를 놓치셨습니다.',
-    )
   }
 
   const actionLabel =
@@ -228,6 +209,15 @@ function App() {
     }
   }
 
+  const feedbackText =
+    phase === 'finished'
+      ? '성공! 10단계 클리어입니다.'
+      : phase === 'result' && result === 'success'
+        ? '정답입니다!'
+        : phase === 'result' && result === 'fail'
+          ? '실패입니다.'
+          : ''
+
   return (
     <div className="app-shell">
       <div className="aurora aurora-a" />
@@ -235,27 +225,14 @@ function App() {
 
       <main className="game-card">
         <header className="header">
-          <p className="badge">Catching Puppy</p>
-          <h1>껌 먹은 강아지를 찾아주세요</h1>
-          <p className="description">떡먹은 용만이 감성 오마주: 기억력 + 집중력 미니게임</p>
+          <h1>껌 먹은 강아지 찾기</h1>
+          <p className="description">집중력 미니게임</p>
         </header>
 
-        <section className="status-grid">
-          <div className="status-item">
-            <span>현재 단계</span>
-            <strong>{stage} / 10</strong>
-          </div>
-          <div className="status-item">
-            <span>강아지 수</span>
-            <strong>{dogCount}마리</strong>
-          </div>
-          <div className="status-item">
-            <span>셔플 제한</span>
-            <strong>10초 이내</strong>
-          </div>
+        <section className="stage-row">
+          <span>현재 단계</span>
+          <strong>{stage} / 10</strong>
         </section>
-
-        <p className="status-text">{statusText}</p>
 
         <section className="board">
           <div className="track" />
@@ -276,17 +253,18 @@ function App() {
               <button
                 key={dog.id}
                 type="button"
-                className={`dog-card ${
+                className={`dog-character ${
                   phase === 'guessing' ? 'guessing' : ''
                 } ${isPicked ? 'picked' : ''} ${showTargetBadge ? 'target' : ''}`}
                 style={{ left: `${slotPositions[dog.slot]}%` }}
                 onClick={() => handleDogPick(dog.id)}
                 disabled={phase !== 'guessing'}
-                aria-label={`${dog.name} 선택`}
+                aria-label={`${dog.id}번 강아지 선택`}
               >
-                <span className="dog-emoji">{dog.emoji}</span>
-                <span className="dog-name">{dog.name}</span>
-                {showTargetBadge && <span className="target-badge">껌 발견</span>}
+                <span className="puppy">
+                  <span className="puppy-emoji">🐶</span>
+                </span>
+                {showTargetBadge && <span className="target-badge">껌 먹음</span>}
               </button>
             )
           })}
@@ -296,11 +274,16 @@ function App() {
           <div className="progress-bar" style={{ width: `${shuffleProgress}%` }} />
         </div>
 
+        {feedbackText && (
+          <p className={`result-text ${result === 'success' || phase === 'finished' ? 'success' : 'fail'}`}>
+            {feedbackText}
+          </p>
+        )}
+
         <section className="controls">
           <button type="button" className="action-btn" onClick={handleAction} disabled={isActionDisabled}>
             {actionLabel}
           </button>
-          <p className="hint">정답 판정 후 버튼으로 다음 단계 또는 재도전을 진행하세요.</p>
         </section>
       </main>
     </div>
