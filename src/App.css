@@ -1,0 +1,345 @@
+:root {
+  --bg-a: #041322;
+  --bg-b: #0d2b3e;
+  --neon-a: #6af7d7;
+  --neon-b: #ffd58a;
+  --card: rgba(12, 30, 45, 0.84);
+  --card-border: rgba(255, 255, 255, 0.26);
+  --text-main: #ecf5ff;
+  --text-sub: #b7cad6;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(106, 247, 215, 0.35), transparent 32%),
+    radial-gradient(circle at 85% 12%, rgba(255, 213, 138, 0.33), transparent 34%),
+    linear-gradient(150deg, var(--bg-a), var(--bg-b));
+  color: var(--text-main);
+  position: relative;
+  overflow: hidden;
+}
+
+.aurora {
+  position: absolute;
+  width: 42vmax;
+  height: 42vmax;
+  border-radius: 50%;
+  filter: blur(56px);
+  opacity: 0.35;
+  pointer-events: none;
+  animation: float 9s ease-in-out infinite;
+}
+
+.aurora-a {
+  background: #6af7d7;
+  top: -18vmax;
+  left: -10vmax;
+}
+
+.aurora-b {
+  background: #ffb86b;
+  bottom: -19vmax;
+  right: -9vmax;
+  animation-delay: -3s;
+}
+
+.game-card {
+  width: min(940px, 100%);
+  backdrop-filter: blur(14px);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 26px;
+  padding: 28px;
+  box-shadow: 0 18px 70px rgba(2, 12, 20, 0.45);
+  position: relative;
+  z-index: 2;
+}
+
+.header h1 {
+  margin: 10px 0 8px;
+  font-size: clamp(1.6rem, 3.1vw, 2.5rem);
+  letter-spacing: 0.01em;
+}
+
+.badge {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #042226;
+  background: linear-gradient(90deg, #6af7d7, #9afad7);
+}
+
+.description {
+  margin: 0;
+  color: var(--text-sub);
+}
+
+.status-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.status-item {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(4, 19, 33, 0.48);
+}
+
+.status-item span {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.status-item strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.05rem;
+}
+
+.status-text {
+  margin: 16px 0;
+  font-size: 1rem;
+  color: #eff9ff;
+}
+
+.board {
+  margin-top: 10px;
+  position: relative;
+  min-height: 270px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.11), transparent 50%),
+    linear-gradient(180deg, rgba(10, 35, 51, 0.72), rgba(4, 20, 32, 0.78));
+  overflow: hidden;
+}
+
+.track {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 172px;
+  height: 70px;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.dog-card {
+  position: absolute;
+  top: 78px;
+  transform: translateX(-50%);
+  width: min(132px, 24vw);
+  border: 1px solid rgba(255, 255, 255, 0.21);
+  border-radius: 16px;
+  background: linear-gradient(170deg, #f3f8fc, #dce7f0);
+  color: #153144;
+  padding: 14px 8px 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition:
+    left 0.34s cubic-bezier(0.32, 0.9, 0.2, 1),
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dog-card:disabled {
+  cursor: default;
+}
+
+.dog-card.guessing {
+  cursor: pointer;
+}
+
+.dog-card.guessing:hover {
+  transform: translateX(-50%) translateY(-4px) rotate(-1deg);
+  border-color: #4ee8c3;
+  box-shadow: 0 14px 24px rgba(7, 53, 47, 0.28);
+}
+
+.dog-card.picked {
+  border-color: #f79539;
+  box-shadow: 0 0 0 3px rgba(247, 149, 57, 0.29), 0 12px 20px rgba(0, 0, 0, 0.26);
+}
+
+.dog-card.target {
+  border-color: #12c28e;
+  box-shadow: 0 0 0 3px rgba(18, 194, 142, 0.32), 0 12px 20px rgba(0, 0, 0, 0.26);
+}
+
+.dog-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.dog-name {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.target-badge {
+  margin-top: 2px;
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: #ffffff;
+  background: linear-gradient(90deg, #03a472, #1ecc95);
+}
+
+.bone {
+  position: absolute;
+  top: 14px;
+  left: var(--target-x);
+  transform: translateX(-50%);
+  font-size: clamp(1.7rem, 3.1vw, 2.2rem);
+  animation: toss 1.2s ease forwards;
+  z-index: 5;
+}
+
+.progress-wrap {
+  margin-top: 16px;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--neon-a), var(--neon-b));
+  transition: width 0.04s linear;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #082127;
+  background: linear-gradient(110deg, #6af7d7, #ffd58a);
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.action-btn:hover:enabled {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 0.9rem;
+}
+
+@keyframes toss {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -18px) rotate(-20deg) scale(0.8);
+  }
+  35% {
+    opacity: 1;
+  }
+  72% {
+    transform: translate(-50%, 105px) rotate(8deg) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 122px) rotate(12deg) scale(0.95);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(12px, -10px, 0);
+  }
+}
+
+@media (max-width: 860px) {
+  .game-card {
+    padding: 20px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .board {
+    min-height: 330px;
+  }
+
+  .track {
+    top: 210px;
+  }
+
+  .dog-card {
+    width: min(118px, 28vw);
+    top: 120px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .header h1 {
+    font-size: 1.46rem;
+  }
+
+  .dog-card {
+    width: min(102px, 30vw);
+    padding: 11px 6px 9px;
+  }
+
+  .dog-emoji {
+    font-size: 1.7rem;
+  }
+
+  .controls {
+    gap: 10px;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+}
