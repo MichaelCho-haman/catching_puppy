@@ -93,7 +93,7 @@
 .board {
   margin-top: 12px;
   position: relative;
-  min-height: 304px;
+  min-height: 232px;
   border-radius: 20px;
   border: 1px solid #d6e5ff;
   background:
@@ -106,8 +106,8 @@
   position: absolute;
   left: 8%;
   right: 8%;
-  top: 190px;
-  height: 64px;
+  top: 138px;
+  height: 52px;
   border-radius: 999px;
   border: 1px dashed #b4cffb;
   background: rgba(49, 130, 246, 0.05);
@@ -115,7 +115,7 @@
 
 .dog-character {
   position: absolute;
-  top: 88px;
+  top: 34px;
   transform: translateX(-50%);
   border: none;
   background: transparent;
@@ -355,16 +355,16 @@
   }
 
   .board {
-    min-height: 330px;
+    min-height: 266px;
   }
 
   .track {
-    top: 206px;
-    height: 68px;
+    top: 156px;
+    height: 56px;
   }
 
   .dog-character {
-    top: 100px;
+    top: 42px;
   }
 
   .puppy {
