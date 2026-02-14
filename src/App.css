@@ -1,12 +1,12 @@
 :root {
-  --bg-a: #081626;
-  --bg-b: #102f42;
-  --neon-a: #7ef4d5;
-  --neon-b: #ffe09c;
-  --card: rgba(8, 26, 39, 0.86);
-  --card-border: rgba(255, 255, 255, 0.22);
-  --text-main: #edf6ff;
-  --text-sub: #c7d8e7;
+  --toss-blue-700: #1b64da;
+  --toss-blue-600: #3182f6;
+  --toss-blue-500: #4f95ff;
+  --toss-blue-100: #e8f3ff;
+  --toss-blue-50: #f5f9ff;
+  --line: #dbe7fb;
+  --text-main: #191f28;
+  --text-sub: #6b7684;
 }
 
 .app-shell {
@@ -15,10 +15,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
-  background:
-    radial-gradient(circle at 12% 14%, rgba(126, 244, 213, 0.35), transparent 32%),
-    radial-gradient(circle at 88% 9%, rgba(255, 224, 156, 0.31), transparent 30%),
-    linear-gradient(155deg, var(--bg-a), var(--bg-b));
+  background: #ffffff;
   color: var(--text-main);
   position: relative;
   overflow: hidden;
@@ -26,38 +23,34 @@
 
 .aurora {
   position: absolute;
-  width: 42vmax;
-  height: 42vmax;
+  width: 40vmax;
+  height: 40vmax;
   border-radius: 50%;
-  filter: blur(56px);
-  opacity: 0.32;
+  filter: blur(72px);
   pointer-events: none;
-  animation: float 9s ease-in-out infinite;
 }
 
 .aurora-a {
-  background: #6af7d7;
+  background: rgba(79, 149, 255, 0.16);
   top: -20vmax;
   left: -12vmax;
 }
 
 .aurora-b {
-  background: #ffce77;
+  background: rgba(49, 130, 246, 0.12);
   bottom: -20vmax;
-  right: -11vmax;
-  animation-delay: -3s;
+  right: -12vmax;
 }
 
 .game-card {
-  width: min(480px, 100%);
-  backdrop-filter: blur(14px);
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 22px;
+  width: min(500px, 100%);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 24px;
   padding: 16px;
-  box-shadow: 0 16px 50px rgba(2, 12, 20, 0.4);
+  box-shadow: 0 14px 40px rgba(49, 130, 246, 0.1);
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 .header {
@@ -66,8 +59,8 @@
 
 .header h1 {
   margin: 0;
-  font-size: clamp(1.45rem, 6vw, 2.1rem);
-  letter-spacing: 0.01em;
+  font-size: clamp(1.5rem, 6vw, 2.1rem);
+  color: var(--toss-blue-700);
 }
 
 .description {
@@ -78,10 +71,10 @@
 
 .stage-row {
   margin-top: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border: 1px solid #d6e5ff;
+  border-radius: 14px;
   padding: 10px 12px;
-  background: rgba(2, 16, 26, 0.45);
+  background: var(--toss-blue-50);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,34 +87,35 @@
 
 .stage-row strong {
   font-size: 1.05rem;
+  color: var(--toss-blue-700);
 }
 
 .board {
   margin-top: 12px;
   position: relative;
-  min-height: 300px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  min-height: 304px;
+  border-radius: 20px;
+  border: 1px solid #d6e5ff;
   background:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1), transparent 52%),
-    linear-gradient(180deg, rgba(10, 35, 51, 0.7), rgba(5, 21, 33, 0.82));
+    radial-gradient(circle at 50% -30%, rgba(79, 149, 255, 0.2), transparent 48%),
+    linear-gradient(180deg, #f8fbff, #eef5ff);
   overflow: hidden;
 }
 
 .track {
   position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 186px;
-  height: 62px;
+  left: 8%;
+  right: 8%;
+  top: 190px;
+  height: 64px;
   border-radius: 999px;
-  border: 1px dashed rgba(255, 255, 255, 0.26);
-  background: rgba(0, 0, 0, 0.12);
+  border: 1px dashed #b4cffb;
+  background: rgba(49, 130, 246, 0.05);
 }
 
 .dog-character {
   position: absolute;
-  top: 92px;
+  top: 88px;
   transform: translateX(-50%);
   border: none;
   background: transparent;
@@ -148,15 +142,15 @@
 }
 
 .puppy {
-  width: 58px;
-  height: 58px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #fff2ce, #f0bf75 62%);
-  border: 2px solid rgba(146, 90, 26, 0.7);
+  background: radial-gradient(circle at 40% 30%, #fff8e6, #f4cf96 68%);
+  border: 2px solid #cc9b5f;
   display: grid;
   place-items: center;
   position: relative;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(30, 73, 140, 0.18);
 }
 
 .puppy::before,
@@ -166,31 +160,98 @@
   top: -8px;
   width: 18px;
   height: 18px;
-  border-radius: 50% 50% 42% 42%;
-  background: #e4b267;
-  border: 2px solid rgba(146, 90, 26, 0.7);
+  border-radius: 55% 55% 45% 45%;
+  background: #f0be82;
+  border: 2px solid #cc9b5f;
   z-index: -1;
 }
 
 .puppy::before {
-  left: 4px;
+  left: 5px;
 }
 
 .puppy::after {
-  right: 4px;
+  right: 5px;
 }
 
-.puppy-emoji {
-  font-size: 1.8rem;
-  line-height: 1;
+.puppy-face {
+  width: 36px;
+  height: 30px;
+  position: relative;
+}
+
+.puppy-eyes {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 22px;
+  height: 4px;
+  transform: translateX(-50%);
+}
+
+.puppy-eyes::before,
+.puppy-eyes::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #2e2f33;
+}
+
+.puppy-eyes::before {
+  left: 2px;
+}
+
+.puppy-eyes::after {
+  right: 2px;
+}
+
+.puppy-nose {
+  position: absolute;
+  left: 50%;
+  top: 13px;
+  width: 9px;
+  height: 7px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 55% 55%;
+  background: #30343a;
+}
+
+.puppy-mouth {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  width: 16px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-bottom: 2px solid #43474d;
+  border-radius: 0 0 10px 10px;
+}
+
+.puppy-blush {
+  position: absolute;
+  top: 18px;
+  width: 7px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 144, 144, 0.45);
+}
+
+.puppy-blush.left {
+  left: 0;
+}
+
+.puppy-blush.right {
+  right: 0;
 }
 
 .dog-character.picked .puppy {
-  box-shadow: 0 0 0 3px rgba(250, 157, 61, 0.35), 0 8px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 176, 86, 0.45), 0 8px 16px rgba(30, 73, 140, 0.18);
 }
 
 .dog-character.target .puppy {
-  box-shadow: 0 0 0 3px rgba(18, 194, 142, 0.35), 0 8px 18px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.45), 0 8px 16px rgba(30, 73, 140, 0.2);
 }
 
 .target-badge {
@@ -198,8 +259,8 @@
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.72rem;
-  color: #fff;
-  background: linear-gradient(90deg, #03a472, #19ca93);
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--toss-blue-600), var(--toss-blue-500));
 }
 
 .bone {
@@ -218,13 +279,13 @@
   height: 8px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.14);
+  background: #e9f1ff;
 }
 
 .progress-bar {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--neon-a), var(--neon-b));
+  background: linear-gradient(90deg, var(--toss-blue-600), var(--toss-blue-500));
   transition: width 0.04s linear;
 }
 
@@ -236,11 +297,11 @@
 }
 
 .result-text.success {
-  color: #79f2cb;
+  color: var(--toss-blue-700);
 }
 
 .result-text.fail {
-  color: #ff9b9b;
+  color: #d14343;
 }
 
 .controls {
@@ -250,19 +311,19 @@
 .action-btn {
   width: 100%;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 12px 14px;
   font-size: 1rem;
   font-weight: 700;
-  color: #082127;
-  background: linear-gradient(110deg, #6af7d7, #ffd58a);
+  color: #ffffff;
+  background: linear-gradient(110deg, var(--toss-blue-600), var(--toss-blue-500));
   cursor: pointer;
   transition: transform 0.18s ease, filter 0.18s ease;
 }
 
 .action-btn:hover:enabled {
   transform: translateY(-2px);
-  filter: brightness(1.06);
+  filter: brightness(1.03);
 }
 
 .action-btn:disabled {
@@ -287,16 +348,6 @@
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(12px, -10px, 0);
-  }
-}
-
 @media (min-width: 768px) {
   .game-card {
     width: min(760px, 100%);
@@ -304,24 +355,24 @@
   }
 
   .board {
-    min-height: 320px;
+    min-height: 330px;
   }
 
   .track {
-    top: 200px;
-    height: 66px;
+    top: 206px;
+    height: 68px;
   }
 
   .dog-character {
-    top: 98px;
+    top: 100px;
   }
 
   .puppy {
-    width: 66px;
-    height: 66px;
+    width: 76px;
+    height: 76px;
   }
 
-  .puppy-emoji {
-    font-size: 2rem;
+  .puppy-face {
+    transform: scale(1.1);
   }
 }

@@ -10,8 +10,8 @@ function getDogCount(stage) {
 function getSlotPositions(count) {
   if (count <= 1) return [50]
 
-  const start = 20
-  const end = 80
+  const start = 12
+  const end = 88
   const gap = (end - start) / (count - 1)
 
   return Array.from({ length: count }, (_, idx) => Number((start + gap * idx).toFixed(2)))
@@ -262,7 +262,13 @@ function App() {
                 aria-label={`${dog.id}번 강아지 선택`}
               >
                 <span className="puppy">
-                  <span className="puppy-emoji">🐶</span>
+                  <span className="puppy-face">
+                    <span className="puppy-eyes" />
+                    <span className="puppy-nose" />
+                    <span className="puppy-mouth" />
+                    <span className="puppy-blush left" />
+                    <span className="puppy-blush right" />
+                  </span>
                 </span>
                 {showTargetBadge && <span className="target-badge">껌 먹음</span>}
               </button>
