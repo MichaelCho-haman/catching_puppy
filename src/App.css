@@ -31,19 +31,19 @@
 }
 
 .aurora-a {
-  background: rgba(79, 149, 255, 0.16);
+  background: rgba(79, 149, 255, 0.12);
   top: -20vmax;
   left: -12vmax;
 }
 
 .aurora-b {
-  background: rgba(49, 130, 246, 0.12);
+  background: rgba(49, 130, 246, 0.1);
   bottom: -20vmax;
   right: -12vmax;
 }
 
 .game-card {
-  width: min(500px, 100%);
+  width: min(520px, 100%);
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 24px;
@@ -71,23 +71,58 @@
 
 .stage-row {
   margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border: 1px solid #d6e5ff;
   border-radius: 14px;
   padding: 10px 12px;
   background: var(--toss-blue-50);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
-.stage-row span {
+.stage-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage-info span {
   font-size: 0.9rem;
   color: var(--text-sub);
 }
 
-.stage-row strong {
+.stage-info strong {
   font-size: 1.05rem;
   color: var(--toss-blue-700);
+}
+
+.share-btn {
+  border: 1px solid #cfe1ff;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--toss-blue-700);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.share-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shared-stage-note {
+  margin: 8px 2px 0;
+  font-size: 0.84rem;
+  color: var(--toss-blue-700);
+}
+
+.share-feedback {
+  margin: 6px 2px 0;
+  font-size: 0.82rem;
+  color: var(--text-sub);
 }
 
 .board {
@@ -104,7 +139,7 @@
 
 .dog-character {
   position: absolute;
-  top: 34px;
+  top: 42px;
   transform: translateX(-50%);
   border: none;
   background: transparent;
@@ -112,7 +147,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition:
     left 0.34s cubic-bezier(0.32, 0.9, 0.2, 1),
     transform 0.2s ease;
@@ -131,11 +166,11 @@
 }
 
 .puppy {
-  width: 62px;
-  height: 62px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, #fff8e6, #f4cf96 68%);
-  border: 2px solid #cc9b5f;
+  background: radial-gradient(circle at 40% 28%, #ffe6b9, #ebb66f 70%);
+  border: 2px solid #c89350;
   display: grid;
   place-items: center;
   position: relative;
@@ -146,35 +181,64 @@
 .puppy::after {
   content: '';
   position: absolute;
-  top: -8px;
+  top: 10px;
   width: 18px;
-  height: 18px;
-  border-radius: 55% 55% 45% 45%;
-  background: #f0be82;
-  border: 2px solid #cc9b5f;
+  height: 32px;
+  border-radius: 60% 60% 65% 65%;
+  background: linear-gradient(180deg, #efbe7f, #d9a162);
+  border: 2px solid #c89350;
   z-index: -1;
 }
 
 .puppy::before {
-  left: 5px;
+  left: -10px;
+  transform: rotate(8deg);
 }
 
 .puppy::after {
-  right: 5px;
+  right: -10px;
+  transform: rotate(-8deg);
 }
 
 .puppy-face {
-  width: 36px;
-  height: 30px;
+  width: 34px;
+  height: 33px;
   position: relative;
+}
+
+.puppy-brows {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 28px;
+  height: 8px;
+  transform: translateX(-50%);
+}
+
+.puppy-brows::before,
+.puppy-brows::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 6px;
+  border-top: 2px solid rgba(157, 103, 39, 0.65);
+  border-radius: 50%;
+}
+
+.puppy-brows::before {
+  left: 0;
+}
+
+.puppy-brows::after {
+  right: 0;
 }
 
 .puppy-eyes {
   position: absolute;
-  top: 6px;
+  top: 10px;
   left: 50%;
-  width: 22px;
-  height: 4px;
+  width: 20px;
+  height: 8px;
   transform: translateX(-50%);
 }
 
@@ -182,45 +246,73 @@
 .puppy-eyes::after {
   content: '';
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #2e2f33;
+  background: #1e1f22;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .puppy-eyes::before {
-  left: 2px;
+  left: 0;
 }
 
 .puppy-eyes::after {
-  right: 2px;
+  right: 0;
+}
+
+.puppy-muzzle {
+  position: absolute;
+  left: 50%;
+  top: 15px;
+  width: 24px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f6d8a5, #e8be84);
 }
 
 .puppy-nose {
   position: absolute;
   left: 50%;
-  top: 13px;
-  width: 9px;
-  height: 7px;
+  top: 1px;
+  width: 11px;
+  height: 8px;
   transform: translateX(-50%);
-  border-radius: 50% 50% 55% 55%;
-  background: #30343a;
+  border-radius: 50% 50% 60% 60%;
+  background: linear-gradient(180deg, #2a2f39, #11151d);
 }
 
 .puppy-mouth {
   position: absolute;
   left: 50%;
-  top: 20px;
-  width: 16px;
+  top: 9px;
+  width: 15px;
   height: 8px;
   transform: translateX(-50%);
-  border-bottom: 2px solid #43474d;
-  border-radius: 0 0 10px 10px;
+}
+
+.puppy-mouth::before,
+.puppy-mouth::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 7px;
+  border-bottom: 2px solid #5a3a20;
+  border-radius: 0 0 8px 8px;
+}
+
+.puppy-mouth::before {
+  left: 0;
+}
+
+.puppy-mouth::after {
+  right: 0;
 }
 
 .puppy-blush {
   position: absolute;
-  top: 18px;
+  top: 20px;
   width: 7px;
   height: 5px;
   border-radius: 50%;
@@ -228,11 +320,11 @@
 }
 
 .puppy-blush.left {
-  left: 0;
+  left: -1px;
 }
 
 .puppy-blush.right {
-  right: 0;
+  right: -1px;
 }
 
 .dog-character.picked .puppy {
@@ -297,6 +389,12 @@
   margin-top: 12px;
 }
 
+.end-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .action-btn {
   width: 100%;
   border: none;
@@ -308,6 +406,12 @@
   background: linear-gradient(110deg, var(--toss-blue-600), var(--toss-blue-500));
   cursor: pointer;
   transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.action-btn.secondary {
+  color: var(--toss-blue-700);
+  border: 1px solid #cfe1ff;
+  background: #ffffff;
 }
 
 .action-btn:hover:enabled {
@@ -329,11 +433,11 @@
     opacity: 1;
   }
   72% {
-    transform: translate(-50%, 112px) rotate(8deg) scale(1.05);
+    transform: translate(-50%, 108px) rotate(8deg) scale(1.05);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, 128px) rotate(12deg) scale(0.95);
+    transform: translate(-50%, 124px) rotate(12deg) scale(0.95);
   }
 }
 
@@ -348,15 +452,45 @@
   }
 
   .dog-character {
-    top: 42px;
+    top: 46px;
   }
 
   .puppy {
-    width: 76px;
-    height: 76px;
+    width: 72px;
+    height: 72px;
+  }
+
+  .puppy::before,
+  .puppy::after {
+    width: 22px;
+    height: 38px;
+    top: 14px;
+  }
+
+  .puppy::before {
+    left: -14px;
+  }
+
+  .puppy::after {
+    right: -14px;
   }
 
   .puppy-face {
-    transform: scale(1.1);
+    transform: scale(1.12);
+  }
+}
+
+@media (max-width: 360px) {
+  .stage-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stage-info {
+    justify-content: space-between;
+  }
+
+  .end-actions {
+    grid-template-columns: 1fr;
   }
 }

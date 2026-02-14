@@ -3,6 +3,20 @@ import './App.css'
 
 const MAX_STAGE = 10
 
+function clampStage(value) {
+  if (!Number.isFinite(value)) return 1
+  return Math.max(1, Math.min(MAX_STAGE, Math.floor(value)))
+}
+
+function getInitialStageFromQuery() {
+  if (typeof window === 'undefined') return 1
+
+  const params = new URLSearchParams(window.location.search)
+  const stageParam = Number(params.get('stage'))
+
+  return clampStage(stageParam)
+}
+
 function getDogCount(stage) {
   return stage >= 5 ? 5 : 3
 }
@@ -10,8 +24,8 @@ function getDogCount(stage) {
 function getSlotPositions(count) {
   if (count <= 1) return [50]
 
-  const start = 12
-  const end = 88
+  const start = 15
+  const end = 85
   const gap = (end - start) / (count - 1)
 
   return Array.from({ length: count }, (_, idx) => Number((start + gap * idx).toFixed(2)))
@@ -51,20 +65,22 @@ function getShuffleInterval(stage) {
 }
 
 function App() {
-  const [stage, setStage] = useState(1)
-  const [dogs, setDogs] = useState(() => createDogs(getDogCount(1)))
+  const sharedStartStage = getInitialStageFromQuery()
+
+  const [stage, setStage] = useState(sharedStartStage)
+  const [dogs, setDogs] = useState(() => createDogs(getDogCount(sharedStartStage)))
   const [targetDogId, setTargetDogId] = useState(null)
   const [phase, setPhase] = useState('ready')
   const [result, setResult] = useState(null)
   const [selectedDogId, setSelectedDogId] = useState(null)
   const [shuffleProgress, setShuffleProgress] = useState(0)
+  const [shareFeedback, setShareFeedback] = useState('')
 
   const feedingTimeoutRef = useRef(null)
   const shuffleTimeoutRef = useRef(null)
   const shuffleIntervalRef = useRef(null)
   const progressIntervalRef = useRef(null)
 
-  const dogCount = getDogCount(stage)
   const slotPositions = useMemo(() => getSlotPositions(dogs.length), [dogs.length])
 
   const targetDog = dogs.find((dog) => dog.id === targetDogId)
@@ -93,9 +109,11 @@ function App() {
   }
 
   const setupStage = (nextStage) => {
+    const safeStage = clampStage(nextStage)
+
     clearTimers()
-    setStage(nextStage)
-    setDogs(createDogs(getDogCount(nextStage)))
+    setStage(safeStage)
+    setDogs(createDogs(getDogCount(safeStage)))
     setTargetDogId(null)
     setPhase('ready')
     setResult(null)
@@ -106,6 +124,16 @@ function App() {
   useEffect(() => {
     return () => clearTimers()
   }, [])
+
+  useEffect(() => {
+    if (!shareFeedback) return
+
+    const timer = window.setTimeout(() => {
+      setShareFeedback('')
+    }, 2500)
+
+    return () => window.clearTimeout(timer)
+  }, [shareFeedback])
 
   const startShuffle = (activeStage) => {
     const duration = getShuffleDuration(activeStage)
@@ -141,13 +169,15 @@ function App() {
     }, duration)
   }
 
-  const startRound = () => {
+  const startRound = (forcedStage = stage) => {
     clearTimers()
 
-    const initialDogs = createDogs(dogCount)
-    const chosen = initialDogs[Math.floor(Math.random() * initialDogs.length)]
+    const currentStage = clampStage(forcedStage)
+    const currentDogs = createDogs(getDogCount(currentStage))
+    const chosen = currentDogs[Math.floor(Math.random() * currentDogs.length)]
 
-    setDogs(initialDogs)
+    setStage(currentStage)
+    setDogs(currentDogs)
     setTargetDogId(chosen.id)
     setSelectedDogId(null)
     setResult(null)
@@ -155,7 +185,7 @@ function App() {
     setPhase('feeding')
 
     feedingTimeoutRef.current = window.setTimeout(() => {
-      startShuffle(stage)
+      startShuffle(currentStage)
     }, 1300)
   }
 
@@ -175,48 +205,72 @@ function App() {
     setPhase('result')
   }
 
-  const actionLabel =
-    phase === 'ready'
-      ? '게임 시작'
-      : phase === 'result' && result === 'success'
-        ? '다음 단계'
-        : phase === 'result' && result === 'fail'
-          ? '현재 단계 다시'
-          : phase === 'finished'
-            ? '1단계부터 다시'
-            : '진행 중...'
+  const buildShareUrl = () => {
+    if (typeof window === 'undefined') return ''
 
-  const isActionDisabled = phase === 'feeding' || phase === 'shuffling' || phase === 'guessing'
+    const url = new URL(`${window.location.origin}${window.location.pathname}`)
+    url.searchParams.set('stage', String(stage))
 
-  const handleAction = () => {
+    return url.toString()
+  }
+
+  const handleShare = async () => {
+    const shareUrl = buildShareUrl()
+
+    if (!shareUrl) return
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: '껌 먹은 강아지 찾기',
+          text: `${stage}단계부터 바로 도전해보세요!`,
+          url: shareUrl,
+        })
+        setShareFeedback('공유가 완료되었습니다.')
+        return
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl)
+        setShareFeedback('공유 링크를 복사했습니다.')
+        return
+      }
+
+      setShareFeedback('이 브라우저에서는 공유를 지원하지 않습니다.')
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
+      }
+      setShareFeedback('공유 중 오류가 발생했습니다. 다시 시도해 주세요.')
+    }
+  }
+
+  const showEndOptions = phase === 'finished' || (phase === 'result' && result === 'fail')
+  const showPrimaryAction = phase === 'ready' || (phase === 'result' && result === 'success')
+
+  const primaryActionLabel = phase === 'ready' ? '게임 시작' : '다음 단계'
+
+  const handlePrimaryAction = () => {
     if (phase === 'ready') {
-      startRound()
+      startRound(stage)
       return
     }
 
     if (phase === 'result' && result === 'success') {
       setupStage(stage + 1)
-      return
-    }
-
-    if (phase === 'result' && result === 'fail') {
-      setupStage(stage)
-      return
-    }
-
-    if (phase === 'finished') {
-      setupStage(1)
     }
   }
 
   const feedbackText =
     phase === 'finished'
-      ? '성공! 10단계 클리어입니다.'
+      ? '축하합니다! 10단계를 클리어하셨습니다.'
       : phase === 'result' && result === 'success'
-        ? '정답입니다!'
+        ? '정답입니다! 다음 단계로 이동하세요.'
         : phase === 'result' && result === 'fail'
-          ? '실패입니다.'
+          ? '게임 종료! 다시 선택해 주세요.'
           : ''
+
+  const canShare = phase !== 'feeding' && phase !== 'shuffling'
 
   return (
     <div className="app-shell">
@@ -230,9 +284,20 @@ function App() {
         </header>
 
         <section className="stage-row">
-          <span>현재 단계</span>
-          <strong>{stage} / 10</strong>
+          <div className="stage-info">
+            <span>현재 단계</span>
+            <strong>{stage} / 10</strong>
+          </div>
+          <button type="button" className="share-btn" onClick={handleShare} disabled={!canShare}>
+            공유하기
+          </button>
         </section>
+
+        {sharedStartStage > 1 && phase === 'ready' && (
+          <p className="shared-stage-note">친구가 공유한 {sharedStartStage}단계부터 시작할 수 있습니다.</p>
+        )}
+
+        {shareFeedback && <p className="share-feedback">{shareFeedback}</p>}
 
         <section className="board">
           {phase === 'feeding' && targetDogId && (
@@ -261,9 +326,12 @@ function App() {
               >
                 <span className="puppy">
                   <span className="puppy-face">
+                    <span className="puppy-brows" />
                     <span className="puppy-eyes" />
-                    <span className="puppy-nose" />
-                    <span className="puppy-mouth" />
+                    <span className="puppy-muzzle">
+                      <span className="puppy-nose" />
+                      <span className="puppy-mouth" />
+                    </span>
                     <span className="puppy-blush left" />
                     <span className="puppy-blush right" />
                   </span>
@@ -285,9 +353,28 @@ function App() {
         )}
 
         <section className="controls">
-          <button type="button" className="action-btn" onClick={handleAction} disabled={isActionDisabled}>
-            {actionLabel}
-          </button>
+          {showPrimaryAction && (
+            <button type="button" className="action-btn" onClick={handlePrimaryAction}>
+              {primaryActionLabel}
+            </button>
+          )}
+
+          {showEndOptions && (
+            <div className="end-actions">
+              <button type="button" className="action-btn secondary" onClick={() => startRound(1)}>
+                처음부터
+              </button>
+              <button type="button" className="action-btn" onClick={() => startRound(stage)}>
+                이 단계부터 하기
+              </button>
+            </div>
+          )}
+
+          {!showPrimaryAction && !showEndOptions && (
+            <button type="button" className="action-btn" disabled>
+              진행 중...
+            </button>
+          )}
         </section>
       </main>
     </div>
